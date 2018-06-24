@@ -41,6 +41,9 @@ private:
   static int audioCallback(jack_nframes_t nframes, void* pvUserData);
   int audioCallback(jack_nframes_t nframes);
 
+  static int graphOrderCallback(void* pvUserData);
+  int graphOrderCallback();
+
   void initialize();
   void uninitialize();
   void start();

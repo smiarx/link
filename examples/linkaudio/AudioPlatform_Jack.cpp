@@ -121,15 +121,31 @@ void AudioPlatform::initialize()
   }
 
   jack_set_process_callback(mpJackClient, AudioPlatform::audioCallback, this);
+  jack_set_graph_order_callback(mpJackClient, AudioPlatform::graphOrderCallback, this);
 
   const double bufferSize = jack_get_buffer_size(mpJackClient);
   const double sampleRate = jack_get_sample_rate(mpJackClient);
 
   mEngine.setBufferSize(static_cast<std::size_t>(bufferSize));
   mEngine.setSampleRate(sampleRate);
+}
+
+
+int AudioPlatform::graphOrderCallback(void* pvUserData)
+{
+  AudioPlatform* pAudioPlatform = static_cast<AudioPlatform*>(pvUserData);
+  return pAudioPlatform->graphOrderCallback();
+}
+
+int AudioPlatform::graphOrderCallback(){
+
+  jack_latency_range_t range;
+  jack_port_get_latency_range( mpJackPorts[0], JackPlaybackLatency, &range );
 
   mEngine.mOutputLatency =
-    std::chrono::microseconds(llround(1.0e6 * bufferSize / sampleRate));
+    std::chrono::microseconds(llround(1.0e6 * range.max / mEngine.mSampleRate));
+
+  return 0;
 }
 
 void AudioPlatform::uninitialize()
